@@ -1,29 +1,24 @@
-﻿using ApiPatrimonio.Data.Extension;
+﻿using ApiPatrimonio.Data.Extensions;
 using ApiPatrimonio.Models;
-using ApiPatrimonio.Repository.Interfaces;
+using ApiPatrimonio.Repositorys.Base;
+using ApiPatrimonio.Repositorys.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 
-namespace ApiPatrimonio.Repository
+namespace ApiPatrimonio.Repositorys
 {
     public class PatrimonioRepository : Repository, IRepository<Patrimonio>
     {
-        public void Delete(int id)
+        public void Delete(Patrimonio entity)
         {
             try
             {
-                base.Parameters.Add(new SqlParameter("@Id", id));
-                base.ProcedureSemRetorno("prDelPatrimonio");
+                base.ProcedureNonReturn("prDelPatrimonio", new ParameterSql("@Id", entity.Id));
             }
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao apagar dados no banco: {ex.Message}");
-            }
-            finally
-            {
-                base.Parameters.Clear();
             }
         }
 
@@ -31,7 +26,7 @@ namespace ApiPatrimonio.Repository
         {
             try
             {
-                DataTable table = base.ProcedureComRetorno("prSelPatrimonio");
+                DataTable table = base.ProcedureWithReturn("prSelPatrimonio");
 
                 List<Patrimonio> listaPatrimonios = new List<Patrimonio>();
 
@@ -52,8 +47,7 @@ namespace ApiPatrimonio.Repository
         {
             try
             {
-                base.Parameters.Add(new SqlParameter("@Id", id));
-                DataTable table = base.ProcedureComRetorno("prSelPatrimonio");
+                DataTable table = base.ProcedureWithReturn("prSelPatrimonio", new ParameterSql("@Id", id));
 
                 Patrimonio patrimonio = table.Rows.Count > 0 ? ConvertDataRow(table.Rows[0]) : null;
 
@@ -63,10 +57,6 @@ namespace ApiPatrimonio.Repository
             {
                 throw new Exception($"Erro ao trazer os dados no banco: {ex.Message}");
             }
-            finally
-            {
-                base.Parameters.Clear();
-            }
         }
 
         public void Save(Patrimonio entity)
@@ -75,15 +65,18 @@ namespace ApiPatrimonio.Repository
             {
                 bool novo = (entity.Id <= 0) || (GetById(entity.Id) == null);
 
-                base.Parameters.Add(new SqlParameter("@Nome", entity.Nome));
-                base.Parameters.Add(new SqlParameter("@MarcaId", entity.MarcaId));
-                base.Parameters.Add(new SqlParameter("@Descricao", entity.Descricao));
+                List<ParameterSql> parameters = new List<ParameterSql>
+                {
+                    new ParameterSql("@Nome", entity.Nome),
+                    new ParameterSql("@MarcaId", entity.MarcaId),
+                    new ParameterSql("@Descricao", entity.Descricao)
+                };
 
                 if (novo)
                 {
-                    base.Parameters.Add(new SqlParameter("@NumeroTombo", entity.NumeroTombo));
+                    parameters.Add(new ParameterSql("@NumeroTombo", entity.NumeroTombo));
 
-                    DataTable table = base.ProcedureComRetorno("prInsPatrimonio");
+                    DataTable table = base.ProcedureWithReturn("prInsPatrimonio", parameters.ToArray());
 
                     if (table != null)
                     {
@@ -94,18 +87,14 @@ namespace ApiPatrimonio.Repository
                 }
                 else
                 {
-                    base.Parameters.Add(new SqlParameter("@Id", entity.Id));
+                    parameters.Add(new ParameterSql("@Id", entity.Id));
 
-                    base.ProcedureSemRetorno("prUpdPatrimonio");
+                    base.ProcedureNonReturn("prUpdPatrimonio", parameters.ToArray());
                 }
             }
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao salvar dados no banco: {ex.Message}");
-            }
-            finally
-            {
-                base.Parameters.Clear();
             }
         }
 
@@ -119,7 +108,8 @@ namespace ApiPatrimonio.Repository
                     Descricao = row["Descricao"].ToString(),
                     Nome = row["Nome"].ToString(),
                     NumeroTombo = row["NumeroTombo"].ToNullableInt(),
-                    UltimaModificacao = row["UltimaModificacao"].ToDateTime(),
+                    DataUltimaModificacao = row["DataUltimaModificacao"].ToDateTime(),
+                    DataCriacao = row["DataCriacao"].ToDateTime(),
                     MarcaId = row["MarcaId"].ToInt()
                 };
 

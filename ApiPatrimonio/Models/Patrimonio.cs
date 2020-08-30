@@ -1,18 +1,15 @@
-﻿using System;
+﻿using ApiPatrimonio.Repositorys.Base;
+using System;
 
 namespace ApiPatrimonio.Models
 {
-    public class Patrimonio
+    public class Patrimonio : Entity
     {
-        public int Id { get; set; }
-
         public string Nome { get; set; }
 
         public string Descricao { get; set; }
 
         public int? NumeroTombo { get; set; }
-
-        public DateTime UltimaModificacao { get; set; }
 
         public int MarcaId { get; set; }
 

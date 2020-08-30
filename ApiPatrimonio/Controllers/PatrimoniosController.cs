@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using ApiPatrimonio.Models;
-using ApiPatrimonio.Repository.Interfaces;
+using ApiPatrimonio.Repositorys.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -116,6 +116,96 @@ namespace ApiPatrimonio.Controllers
             }
         }
 
+        [HttpPost("lote")]
+        public IActionResult Post([FromBody] List<Patrimonio> listaPatrimonios, [FromQuery] bool validarMarca, [FromQuery] bool validarNome)
+        {
+            try
+            {
+                List<string> listaSucesso = new List<string>();
+                List<string> listaErros = new List<string>();
+
+                int nomesInvalidos = 0;
+                int marcasInvalidas = 0;
+                int marcaNaoExiste = 0;
+                int nomeJaExistente = 0;
+
+                foreach (Patrimonio patrimonio in listaPatrimonios)
+                {
+                    if (string.IsNullOrWhiteSpace(patrimonio.Nome))
+                    {
+                        nomesInvalidos++;
+                    }
+
+                    if (patrimonio.MarcaId <= 0)
+                    {
+                        marcasInvalidas++;
+                    }
+
+                    if (validarMarca)
+                    {
+                        bool naoExisteMarca = _repositoryMarca.GetById(patrimonio.MarcaId) == null;
+
+                        if (naoExisteMarca)
+                        {
+                            marcaNaoExiste++;
+                        }
+                    }
+
+                    if (validarNome)
+                    {
+                        bool existeNome = _repositoryPatrimonio.GetAll().Where(x => x.Nome == patrimonio.Nome).Any();
+
+                        if (existeNome)
+                        {
+                            nomeJaExistente++;
+                        }
+                    }
+
+                    Patrimonio novoPatrimonio = new Patrimonio(patrimonio.Nome, patrimonio.Descricao, patrimonio.MarcaId);
+
+                    _repositoryPatrimonio.Save(novoPatrimonio);
+
+                    listaSucesso.Add($"{this.RouteData.Values["controller"]}/{novoPatrimonio.Id}");
+                }
+
+                if (nomesInvalidos > 0)
+                {
+                    listaErros.Add($"Nomes em branco: {nomesInvalidos}");
+                }
+
+                if (marcasInvalidas > 0)
+                {
+                    listaErros.Add($"Marcas inválidas: {nomesInvalidos}");
+                }
+
+                if (marcaNaoExiste > 0)
+                {
+                    listaErros.Add($"Marcas com IDs não existentes: {nomesInvalidos}");
+                }
+
+                if (nomeJaExistente > 0)
+                {
+                    listaErros.Add($"Nomes já existentes: {nomesInvalidos}");
+                }
+
+                if (!listaSucesso.Any())
+                {
+                    return BadRequest(listaErros);
+                }
+
+                if (listaErros.Any())
+                {
+                    listaSucesso.AddRange(listaErros);
+                }
+
+                return Created(this.RouteData.Values["controller"].ToString(), listaSucesso);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
         [HttpPut("{id}")]
         public IActionResult Put(
             [FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}"), Required(ErrorMessage = "Campo {0} requerido!")] int id,
@@ -181,14 +271,14 @@ namespace ApiPatrimonio.Controllers
         {
             try
             {
-                bool naoExiste = _repositoryPatrimonio.GetById(id) == null;
+                Patrimonio patrimonio = _repositoryPatrimonio.GetById(id);
 
-                if (naoExiste)
+                if (patrimonio == null)
                 {
                     return NotFound();
                 }
 
-                _repositoryPatrimonio.Delete(id);
+                _repositoryPatrimonio.Delete(patrimonio);
 
                 return NoContent();
             }

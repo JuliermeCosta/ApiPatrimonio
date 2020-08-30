@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace ApiPatrimonio.Data.Extension
+namespace ApiPatrimonio.Data.Extensions
 {
     public static class ConversionExtension
     {

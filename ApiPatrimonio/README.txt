@@ -43,6 +43,15 @@ HTTP METHOD: DELETE
 ENTRADA: Nenhum
 RETORNO ESPERADO: Nenhum
 
+1.1.6 - Inserir novos patrimônios em lote
+ROTA: /patrimonios/lote
+HTTP METHOD: POST
+ENTRADA: Nome (texto, obrigatório), Descricao (texto, não obrigatório), MarcaId(número inteiro positivo, obrigatório) (JSON)
+RETORNO ESPERADO: Lista das rotas para cada patrimônio criado
+QUERYSTRINGS:
+-validarMarca(true ou false, não obrigatório) - Verifica a existência da marca pela MarcaId
+-validarNome(true ou false, não obrigatório) - Verifica se o nome do patrimônio já foi incluído
+
 1.2 MARCA
 
 1.2.1 - Obter todas as marcas
@@ -87,6 +96,12 @@ HTTP METHOD: DELETE
 ENTRADA: Nenhum
 RETORNO ESPERADO: Nenhum
 
+1.2.7 - Inserir novas marcas em lote
+ROTA: /patrimonios/lote
+HTTP METHOD: POST
+ENTRADA: Nome (texto, obrigatório) (JSON)
+RETORNO ESPERADO: Lista das rotas para cada marca criada
+
 2 - PROGRAMAÇÃO
 LINGUAGEM: C#
 FRAMEWORK: .NET Core 3.1
@@ -95,7 +110,7 @@ BANCO DE DADOS: SQL Server 2019 Express
 CONNECTION STRING: appsettings.json
 
 2.1 - PASTA REPOSITORY
-Contém o conjunto de classes para manipulação do banco de dados. A interface IRepository é usada para aplicar a injeção de dependência através da classe Startup.
+Contém o conjunto de classes para manipulação do banco de dados. A interface IRepository é usada para aplicar a injeção de dependência através da classe Startup. As entidades precisam ser herdadas da classe abstrata Entity.
 
 2.2 - CLASSE CONFIGURATION MANAGER
 Classe estática usada para deserializar o arquivo de configuração appsettings.json.

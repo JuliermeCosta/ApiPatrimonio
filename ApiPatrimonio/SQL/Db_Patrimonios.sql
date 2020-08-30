@@ -8,7 +8,8 @@ GO
 CREATE TABLE [dbo].[tbMarca](
 		[Id] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 		[Nome] [varchar](100) NOT NULL,
-		[UltimaModificacao] [datetime] NOT NULL
+		[DataUltimaModificacao] [datetime] NOT NULL,
+		[DataCriacao] [datetime] NOT NULL,
 	);
 
 /****** Tabela [dbo].[tbPatrimonio] ******/
@@ -18,7 +19,8 @@ CREATE TABLE [dbo].[tbPatrimonio](
 		[MarcaId] [int] NOT NULL,
 		[Descricao] [varchar](255) NULL,
 		[NumeroTombo] [int] NOT NULL,
-		[UltimaModificacao] [datetime] NOT NULL
+		[DataUltimaModificacao] [datetime] NOT NULL,
+		[DataCriacao] [datetime] NOT NULL,
 	);
 
 /****** StoredProcedure [dbo].[prDelMarca] ******/
@@ -83,11 +85,13 @@ BEGIN
 	INSERT INTO tbMarca
 	( 
 	   Nome      
-      ,UltimaModificacao
+      ,DataUltimaModificacao
+	  ,DataCriacao
 	) 
 	VALUES
 	( 
 		@Nome		
+		,GETDATE()
 		,GETDATE()
 	) 
 	SELECT SCOPE_IDENTITY() AS Id;
@@ -120,7 +124,8 @@ BEGIN
       ,MarcaId
       ,Descricao
       ,NumeroTombo
-      ,UltimaModificacao
+      ,DataUltimaModificacao
+	  ,DataCriacao
 	) 
 	VALUES
 	( 
@@ -128,6 +133,7 @@ BEGIN
 		,@MarcaId
 		,@Descricao
 		,@NumeroTombo
+		,GETDATE()
 		,GETDATE()
 	) 
 	SELECT SCOPE_IDENTITY() AS Id;
@@ -203,7 +209,7 @@ BEGIN
 	UPDATE tbMarca
 	SET
 		Nome = @Nome		
-		,UltimaModificacao = GETDATE()
+		,DataUltimaModificacao = GETDATE()
 	WHERE Id = @Id
 END
 GO
@@ -231,7 +237,7 @@ BEGIN
 		Nome = @Nome
 		,MarcaId = @MarcaId
 		,Descricao = @Descricao
-		,UltimaModificacao = GETDATE()
+		,DataUltimaModificacao = GETDATE()
 	WHERE Id = @Id
 END
 GO

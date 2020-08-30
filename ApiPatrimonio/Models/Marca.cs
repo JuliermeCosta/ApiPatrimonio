@@ -1,18 +1,15 @@
-﻿using System;
+﻿using ApiPatrimonio.Repositorys.Base;
 
 namespace ApiPatrimonio.Models
 {
-    public class Marca
+    public class Marca : Entity
     {
-        public int Id { get; set; }
-
         public string Nome { get; set; }
-
-        public DateTime UltimaModificacao { get; set; }
 
         public Marca()
         {
         }
+
         public Marca(string nome)
         {
             Nome = nome;

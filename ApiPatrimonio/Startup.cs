@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ApiPatrimonio.Repository.Interfaces;
-using ApiPatrimonio.Repository;
+using ApiPatrimonio.Repositorys.Interfaces;
+using ApiPatrimonio.Repositorys;
 using ApiPatrimonio.Models;
 
 namespace ApiPatrimonio

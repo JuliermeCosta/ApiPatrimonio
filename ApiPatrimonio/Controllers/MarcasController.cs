@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using ApiPatrimonio.Models;
-using ApiPatrimonio.Repository.Interfaces;
+using ApiPatrimonio.Repositorys.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +23,7 @@ namespace ApiPatrimonio.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult ListarTodos()
         {
             try
             {
@@ -43,7 +43,7 @@ namespace ApiPatrimonio.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}")] int id)
+        public IActionResult ListarPorId([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}")] int id)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace ApiPatrimonio.Controllers
         }
 
         [HttpGet("{id}/patrimonios")]
-        public IActionResult GetPatrimonios([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}")] int id)
+        public IActionResult ListarPatrimonios([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}")] int id)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace ApiPatrimonio.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Marca marca)
+        public IActionResult Incluir([FromBody] Marca marca)
         {
             try
             {
@@ -118,7 +118,7 @@ namespace ApiPatrimonio.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(
+        public IActionResult Atualizar(
             [FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}"), Required(ErrorMessage = "Campo {0} requerido!")] int id,
             [FromBody] Marca marca
             )
@@ -153,20 +153,76 @@ namespace ApiPatrimonio.Controllers
             }
         }
 
-
-        [HttpDelete("{id}")]
-        public IActionResult Delete([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}"), Required(ErrorMessage = "Campo {0} requerido!")] int id)
+        [HttpPost("lote")]
+        public IActionResult AtualizarEmLote([FromBody] List<Marca> listaMarcas, [FromQuery] bool validarMarca, [FromQuery] bool validarNome)
         {
             try
             {
-                bool naoExiste = _repositoryMarca.GetById(id) == null;
+                List<string> listaSucesso = new List<string>();
+                List<string> listaErros = new List<string>();
 
-                if (naoExiste)
+                int nomesInvalidos = 0;
+                int nomeJaExistente = 0;
+
+                foreach (Marca marca in listaMarcas)
+                {
+                    if (string.IsNullOrWhiteSpace(marca.Nome))
+                    {
+                        nomesInvalidos++;
+                    }
+                    else if (NomeJaExiste(marca.Nome))
+                    {
+                        nomeJaExistente++;
+                    }
+
+                    Marca novaMarca = new Marca(marca.Nome);
+
+                    _repositoryMarca.Save(novaMarca);
+
+                    listaSucesso.Add($"{this.RouteData.Values["controller"]}/{novaMarca.Id}");
+                }
+
+                if (nomesInvalidos > 0)
+                {
+                    listaErros.Add($"Nomes em branco: {nomesInvalidos}");
+                }
+
+                if (nomeJaExistente > 0)
+                {
+                    listaErros.Add($"Nomes já existentes: {nomesInvalidos}");
+                }
+
+                if (!listaSucesso.Any())
+                {
+                    return BadRequest(listaErros);
+                }
+
+                if (listaErros.Any())
+                {
+                    listaSucesso.AddRange(listaErros);
+                }
+
+                return Created(this.RouteData.Values["controller"].ToString(), listaSucesso);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Apagar([FromRoute, Range(1, int.MaxValue, ErrorMessage = "Digite um valor entre {1} e {2}"), Required(ErrorMessage = "Campo {0} requerido!")] int id)
+        {
+            try
+            {
+                Marca marca = _repositoryMarca.GetById(id);
+
+                if (marca == null)
                 {
                     return NotFound();
                 }
 
-                _repositoryMarca.Delete(id);
+                _repositoryMarca.Delete(marca);
 
                 return NoContent();
             }
